@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter.font import *
 from tkinter.ttk import *
+import datetime
 import requests
 import webbrowser
 
@@ -60,26 +61,32 @@ class Main(Tk):
         super().__init__()
 
         self.iconphoto(True, PhotoImage(file="icon.png"))
-        self.title('Журнал - "Альтернатива" Клиент для ПК')
+        self.title('Журнал - "Альтернатива" ПК-клієнт')
         self.state("zoomed")
         self.focus_force()
-        
-        settings_frame = Frame(self)
+
+        panel_frame = Frame(self)
+        leftpanel_frame = Frame(panel_frame)
         self.subj_var = StringVar(self)
-        self.subj_cbox = Combobox(settings_frame, values=list(SUBJ_IDS.keys()), state="readonly", textvariable=self.subj_var)
+        self.subj_cbox = Combobox(leftpanel_frame, values=list(SUBJ_IDS.keys()), state="readonly", textvariable=self.subj_var)
         self.subj_cbox.current(0)
         self.subj_cbox.pack(side=LEFT)
 
         self.lang_var = StringVar(self)
-        self.lang_cbox = Combobox(settings_frame, values=["RU", "UA"], state="readonly", textvariable=self.lang_var, width=3)
+        self.lang_cbox = Combobox(leftpanel_frame, values=["RU", "UA"], state="readonly", textvariable=self.lang_var, width=3)
         self.lang_cbox.current(0)
-        self.lang_cbox.pack(side=RIGHT)
+        self.lang_cbox.pack(side=LEFT)
 
-        self.year_var = StringVar(self)
-        self.year_cbox = Combobox(settings_frame, values=["--"], state="readonly", textvariable=self.year_var)
-        self.year_cbox.current(0)
-        self.year_cbox.pack()
-        settings_frame.pack(fill=Y)
+        self.show_base_info_var = BooleanVar(self, False)
+        Checkbutton(leftpanel_frame, text="Відображати базову інформацію", variable=self.show_base_info_var).pack(side=LEFT)
+        leftpanel_frame.pack(side=LEFT)
+
+        rightpanel_frame = Frame(panel_frame)
+        Button(leftpanel_frame, text="Увійти до аккаунту", command=self.login).pack(side=LEFT)
+        Button(rightpanel_frame, text="Інші налаштування ⚙", command=self.advanced_settings).pack(side=LEFT)
+        Button(rightpanel_frame, text="Допомога ❓", command=self.help).pack(side=LEFT)
+        rightpanel_frame.pack(side=RIGHT)
+        panel_frame.pack(fill=X)
 
         treeview_frame = Frame(self)
         self.treeview = Treeview(treeview_frame, selectmode="browse", columns=["date", "marks", "special"])
@@ -95,7 +102,10 @@ class Main(Tk):
         self.treeview.tag_configure("lesson", font=(None, 12))
         self.treeview.tag_configure("isControl", background="#dcffd3")
         self.treeview.tag_configure("isVerbal", background="#c0b6fa")
-        
+        self.treeview.tag_configure("todayLesson", font=Font(size=12, underline=True))
+        self.treeview.tag_configure("thematic_mark", font=(None, 12, "italic"))
+        self.treeview.tag_configure("base_info", font=(None, 12))
+
         self.treeview.pack(fill=BOTH, expand=YES, side=LEFT)
 
         self.tscrollbar = Scrollbar(treeview_frame, command=self.treeview.yview)
@@ -105,7 +115,7 @@ class Main(Tk):
 
         self.subj_var.trace("w", self.update_info)
         self.lang_var.trace("w", self.update_info)
-        self.year_var.trace("w", self.update_info)
+        self.show_base_info_var.trace("w", self.update_info)
 
         self.create_menus()
         self.update_info()
@@ -116,10 +126,11 @@ class Main(Tk):
                 selected_item = self.treeview.identify_row(event.y)
                 self.treeview.selection_set(selected_item)
                 item_values = self.treeview.item(selected_item)["values"]
-                menu_labels = ["Скласти Тренувальний Тест", "Скласти Тестове ДЗ", "Скласти Творче ДЗ"]
-                for i in range(2, 5):
-                    self.rclick_menu.entryconfig(menu_labels[i - 2], state="normal" if item_values[-i] else "disabled")
-                if "lesson" in self.treeview.item(selected_item)["tags"]:
+                item_tags = self.treeview.item(selected_item)["tags"]
+                if "lesson" in item_tags or "todayLesson" in item_tags:
+                    menu_labels = ["Скласти Тренувальний Тест", "Скласти Тестове ДЗ", "Скласти Творче ДЗ"]
+                    for i in range(2, 5):
+                        self.rclick_menu.entryconfig(menu_labels[i - 2], state="normal" if item_values[-i] else "disabled")
                     self.rclick_menu.post(event.x_root, event.y_root)
             finally:
                 self.rclick_menu.grab_release()
@@ -138,56 +149,104 @@ class Main(Tk):
         
         
     def update_info(self, *args):
-        # TODO: sort the dict keys (it's necessary for older Python versions)
-        # TODO: Н/А или 0 - what's the difference
-        # TODO: add other functions to look like full journal
-        # TODO: show what: tv.dz or test.dz left
         # TODO: add catching errors
-        # TODO: add archive years
-        
+        # TODO: add archived years
+        # TODO: add properties
+        # TODO: add creative work opening
+      
         subject = self.subj_var.get()
         language = self.lang_var.get()
-        journal_data = requests.get("https://online-shkola.com.ua/api/v2/users/%s/thematic/subject/%s" % (UID, SUBJ_IDS[subject]), headers=REQUEST_HEADERS, cookies={"lang": language.lower()}).json()["themes"]
-        #journal_data = requests.get("https://online-shkola.com.ua/api/v2/users/%s/thematic/archive/2/subject/%s" % (UID, SUBJ_IDS[subject]), headers=REQUEST_HEADERS, cookies={"lang": language.lower()}).json()["themes"]
-    
-        """for topic in sorted(journal_data):
-            topic_data = journal_data[topic]
-            for subtopic in sorted(topic_data.keys()):
-                print(topic, subtopic)"""
+        journal_data = requests.get("https://online-shkola.com.ua/api/v2/users/%s/thematic/subject/%s" % (UID, SUBJ_IDS[subject]),
+                                   headers=REQUEST_HEADERS, cookies={"lang": language.lower()}).json()
         
-        #pprint(journal_data)
         self.treeview.delete(*self.treeview.get_children())
-        
-        for topic in journal_data:
-            topic_tw_item = self.treeview.insert("", END, text=topic["title"], tag="topic")
-            self.treeview.item(topic_tw_item, open=True)
-            for subtopic in topic["lessons"]:
+
+        if self.show_base_info_var.get():
+            base_info_tv_item = self.treeview.insert("", END, text="Базова Інформація", tag="topic")
+            start_learning_date = journal_data["dateStartLearning"].split("-")
+
+            self.treeview.insert(base_info_tv_item, END, text="Дата зарахування до школи:", values=(" ".join((str(int(start_learning_date[2])), MONTHS2UA[start_learning_date[1]], start_learning_date[0])),),
+                                 tag="base_info")
+            self.treeview.insert(base_info_tv_item, END, text="Семестрова оцінка з даного предмету:", values=(str(journal_data["mark"]) + " балів",), tag="base_info")
+            self.treeview.insert(base_info_tv_item, END, text="Відкрито уроків:", values=(str(journal_data["visitedPercentage"]) + " %",), tag="base_info")
+            self.treeview.insert(base_info_tv_item, END, text="Виконано Тестових ДЗ:", values=(str(journal_data["doneTestsPercentage"]) + " %",), tag="base_info")
+            self.treeview.insert(base_info_tv_item, END, text="Виконано Творчих ДЗ:", values=(str(journal_data["doneHwPercentage"]) + " %",), tag="base_info")
+
+            self.treeview.insert("", END)
+            
+        for topic in journal_data["themes"]:
+            topic_tv_item = self.treeview.insert("", END, text=topic["title"], tag="topic")
+            self.treeview.item(topic_tv_item, open=True)
+            for lesson in topic["lessons"]:
                 tags = ["lesson"]
-                if subtopic["testMark"] and subtopic["hw"]["mark"]:
-                    result_mark = (subtopic["testMark"] + subtopic["hw"]["mark"]) / 2  # is this the real mark??? or there's another alghoritm of calculating of it?
-                elif subtopic["testMark"]:
-                    result_mark = subtopic["testMark"]
-                elif subtopic["hw"]["mark"]:
-                    result_mark = subtopic["hw"]["mark"]
+                
+                isHw = int(lesson["hw"]["isHw"])
+                testId = 0 if "testId" not in lesson else lesson["testId"]
+                trainingTestId = 0 if "trainingTestId" not in lesson else lesson["trainingTestId"]
+                lessonId = lesson["id"]
+
+                # Get and process the marks
+                if trainingTestId:
+                    training_test_mark = lesson["trainingTestMark"] if lesson["trainingTestMark"] else "☒"  # TODO: how to determine if it is sent and 0, or it is not sent
                 else:
-                    result_mark = "Н/А"
-                mark = "%s (%s/%s/%s)" % (result_mark, subtopic["trainingTestMark"], subtopic["testMark"], subtopic["hw"]["mark"])
-                date = subtopic["date"].split()[0].split("-")
+                    training_test_mark = "—"
+                hw_mark = "☒"
+                test_mark = "☒"
+                result_mark = "☒"
+                if isHw:
+                    if lesson["hw"]["status"] == 4:
+                        hw_mark = lesson["hw"]["mark"]
+                        result_mark = hw_mark
+                else:
+                    hw_mark = "—"
+                if testId:
+                    if lesson["isCompleted"]:
+                        test_mark = lesson["testMark"]
+                        result_mark = test_mark
+                else:
+                    test_mark = "—"
+                if hw_mark == test_mark == "—":
+                    result_mark = "—"
+                if (hw_mark not in ["—", "☒"]) and (test_mark not in ["—", "☒"]):
+                    result_mark = hw_mark + test_mark
+                mark = "%s (%s/%s/%s)" % (result_mark, training_test_mark, test_mark, hw_mark)
+
+                # Get and process the date
+                date = lesson["date"].split()[0]
+                cur_date = datetime.date.today()
+                if date == "{:0>2}-{:0>2}-{:0>2}".format(cur_date.year, cur_date.month, cur_date.day):  # is this a today lesson?
+                    tags.remove("lesson")
+                    tags.append("todayLesson")
+                date = date.split("-")
                 date = " ".join((str(int(date[2])), MONTHS2UA[date[1]], date[0]))
+
+                # Get and process the special marks
                 special = ""
                 for smark in SPECIAL:
-                    if subtopic[smark]:
+                    if lesson[smark]:
                         special += SPECIAL[smark] + " "
                         tags.append(smark)
-                isHw = int(subtopic["hw"]["isHw"])
-                testId = 0 if "testId" not in subtopic else subtopic["testId"]
-                trainingTestId = 0 if "trainingTestId" not in subtopic else subtopic["trainingTestId"]
-                lessonId = subtopic["id"]
-                x = self.treeview.insert(topic_tw_item, END, text=subtopic["title"], values=(date, mark, special, isHw, testId, trainingTestId, lessonId), tags=tags)
+                
+                self.treeview.insert(topic_tv_item, END, text=lesson["title"], values=(date, mark, special, isHw, testId, trainingTestId, lessonId), tags=tags)
+
+            # Count the thematic mark
+            marks_list = []
+            control_mark = -1  # for the case if the control work is not done yet
+            for item in self.treeview.get_children(topic_tv_item):
+                result_mark = self.treeview.item(item, "values")[1].split()[0]
+                if (result_mark not in "—☒") and (SPECIAL["isSickLeave"] not in self.treeview.item(item)) and (SPECIAL["isVerbal"] not in self.treeview.item(item)):
+                    if SPECIAL["isControl"] not in self.treeview.item(item)["values"][2]:
+                        marks_list.append(int(result_mark))
+                    else:
+                        control_mark = int(result_mark)
+            thematic = sum(marks_list) / len(marks_list)
+            if control_mark != -1:  # if the control work is already done
+                thematic = (thematic + control_mark) / 2    
+            self.treeview.insert(topic_tv_item, END, values=("", "Тематична: %.f" % thematic), tag="thematic_mark")
 
     def open_lesson_in_webbrowser(self, event=None):
         item_info = self.treeview.item(self.treeview.selection()[0])
-        if "lesson" in item_info["tags"]:
+        if "lesson" in item_info["tags"] or "todayLesson" in item_info["tags"]:
             webbrowser.open("https://online-shkola.com.ua/lessons/watch.php?id=%s" % item_info["values"][-1])
 
     def open_training_test_in_webbrowser(self, event=None):
@@ -197,6 +256,15 @@ class Main(Tk):
         webbrowser.open("https://online-shkola.com.ua/tests/completing.php?id=%s" % self.treeview.item(self.treeview.selection()[0])["values"][-3])
 
     def view_properties(self, event=None):
+        pass
+
+    def login(self, event=None):
+        webbrowser.open("https://online-shkola.com.ua/")
+
+    def advanced_settings(self, event=None):
+        pass
+
+    def help(self, event=None):
         pass
     
 if __name__ == "__main__":
