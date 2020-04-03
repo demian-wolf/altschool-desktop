@@ -150,6 +150,7 @@ class Main(Tk):
         # TODO: add catching errors
         # TODO: add archived years
         # TODO: add properties
+        # TODO: do something only when something selected in Treeview, not just double-clicked
       
         subject = self.subj_var.get()
         language = self.lang_var.get()
@@ -243,7 +244,6 @@ class Main(Tk):
                 thematic = "%.f" % thematic
             else:
                 thematic = "☒"
-            print(marks_list, thematic)
             self.treeview.insert(topic_tv_item, END, values=("", "Тематична: %s" % thematic), tag="thematic_mark")
 
     def open_lesson_in_webbrowser(self, event=None):
