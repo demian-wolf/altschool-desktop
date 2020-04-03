@@ -152,7 +152,6 @@ class Main(Tk):
         # TODO: add catching errors
         # TODO: add archived years
         # TODO: add properties
-        # TODO: add creative work opening
       
         subject = self.subj_var.get()
         language = self.lang_var.get()
@@ -239,10 +238,15 @@ class Main(Tk):
                         marks_list.append(int(result_mark))
                     else:
                         control_mark = int(result_mark)
-            thematic = sum(marks_list) / len(marks_list)
-            if control_mark != -1:  # if the control work is already done
-                thematic = (thematic + control_mark) / 2    
-            self.treeview.insert(topic_tv_item, END, values=("", "Тематична: %.f" % thematic), tag="thematic_mark")
+            if len(marks_list):
+                thematic = sum(marks_list) / len(marks_list)
+                if control_mark != -1:  # if the control work is already done
+                    thematic = (thematic + control_mark) / 2
+                thematic = "%.f" % thematic
+            else:
+                thematic = "☒"
+            print(marks_list, thematic)
+            self.treeview.insert(topic_tv_item, END, values=("", "Тематична: %s" % thematic), tag="thematic_mark")
 
     def open_lesson_in_webbrowser(self, event=None):
         item_info = self.treeview.item(self.treeview.selection()[0])
@@ -257,7 +261,7 @@ class Main(Tk):
 
     def open_hw_in_webbrowser(self, even=None):
         webbrowser.open("https://online-shkola.com.ua/lessons/watch.php?id=%s#lesson-content-homework" % self.treeview.item(self.treeview.selection()[0])["values"][-1])
-    
+
     def view_properties(self, event=None):
         pass
 
@@ -269,6 +273,14 @@ class Main(Tk):
 
     def help(self, event=None):
         pass
+
+class AdvancedSettings(Toplevel):
+    def __init__(self):
+        super().__init__()
+
+class Help(Toplevel):
+    def __init__(self):
+        super().__init__()
     
 if __name__ == "__main__":
     Main().mainloop()
