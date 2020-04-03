@@ -5,8 +5,6 @@ import datetime
 import requests
 import webbrowser
 
-from pprint import pprint
-
 
 SUBJ_IDS = {
     'Фізика': 3,
