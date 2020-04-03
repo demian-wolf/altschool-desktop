@@ -142,7 +142,7 @@ class Main(Tk):
         self.rclick_menu.add_separator()
         self.rclick_menu.add_command(label="Скласти Тренувальний Тест", command=self.open_training_test_in_webbrowser)
         self.rclick_menu.add_command(label="Скласти Тестове ДЗ", command=self.open_test_hw_in_webbrowser)
-        self.rclick_menu.add_command(label="Скласти Творче ДЗ")
+        self.rclick_menu.add_command(label="Скласти Творче ДЗ", command=self.open_hw_in_webbrowser)
         self.rclick_menu.add_separator()
         self.rclick_menu.add_command(label="Властивості", command=self.view_properties)
         self.treeview.bind("<Button-3>", do_rclick_popup)
@@ -255,6 +255,9 @@ class Main(Tk):
     def open_test_hw_in_webbrowser(self, event=None):
         webbrowser.open("https://online-shkola.com.ua/tests/completing.php?id=%s" % self.treeview.item(self.treeview.selection()[0])["values"][-3])
 
+    def open_hw_in_webbrowser(self, even=None):
+        webbrowser.open("https://online-shkola.com.ua/lessons/watch.php?id=%s#lesson-content-homework" % self.treeview.item(self.treeview.selection()[0])["values"][-1])
+    
     def view_properties(self, event=None):
         pass
 
