@@ -4,6 +4,7 @@ from tkinter.ttk import *
 import datetime
 import requests
 import webbrowser
+import time
 
 
 SUBJ_IDS = {
@@ -58,6 +59,8 @@ class Main(Tk):
     def __init__(self):
         super().__init__()
 
+        # withdraw and deiconify are used to make window opening slighter
+        self.withdraw()
         self.iconphoto(True, PhotoImage(file="icon.png"))
         self.title('Журнал - "Альтернатива" ПК-клієнт')
         self.state("zoomed")
@@ -74,6 +77,9 @@ class Main(Tk):
         self.lang_cbox = Combobox(leftpanel_frame, values=["RU", "UA"], state="readonly", textvariable=self.lang_var, width=3)
         self.lang_cbox.current(0)
         self.lang_cbox.pack(side=LEFT)
+
+        self.update_button = Button(leftpanel_frame, text="Оновити ⭮", command=self.update_info)
+        self.update_button.pack(side=LEFT)
 
         self.show_base_info_var = BooleanVar(self, False)
         Checkbutton(leftpanel_frame, text="Відображати базову інформацію", variable=self.show_base_info_var).pack(side=LEFT)
@@ -116,7 +122,8 @@ class Main(Tk):
         self.show_base_info_var.trace("w", self.update_info)
 
         self.create_menus()
-        self.update_info()
+        self.update_info(first_time=True)
+        self.deiconify()
 
     def create_menus(self):
         def do_rclick_popup(event):
@@ -146,12 +153,16 @@ class Main(Tk):
         self.treeview.bind("<Button-3>", do_rclick_popup)
         
         
-    def update_info(self, *args):
+    def update_info(self, *args, first_time=False):
         # TODO: add catching errors
         # TODO: add archived years
         # TODO: add properties
         # TODO: do something only when something selected in Treeview, not just double-clicked
-      
+
+        self.update_button.config(state="disabled")
+        if not first_time:
+            self.update_idletasks()
+        
         subject = self.subj_var.get()
         language = self.lang_var.get()
         journal_data = requests.get("https://online-shkola.com.ua/api/v2/users/%s/thematic/subject/%s" % (UID, SUBJ_IDS[subject]),
@@ -245,6 +256,7 @@ class Main(Tk):
             else:
                 thematic = "☒"
             self.treeview.insert(topic_tv_item, END, values=("", "Тематична: %s" % thematic), tag="thematic_mark")
+        self.update_button.config(state="normal")
 
     def open_lesson_in_webbrowser(self, event=None):
         item_info = self.treeview.item(self.treeview.selection()[0])
