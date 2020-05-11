@@ -5,7 +5,6 @@ from collections import OrderedDict
 import datetime
 import requests
 import webbrowser
-import time
 
 
 SUBJ_IDS = OrderedDict([
