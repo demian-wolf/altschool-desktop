@@ -254,7 +254,7 @@ class Main(Tk):
                     thematic = (thematic + control_mark) / 2
                 thematic = "%.f" % thematic
             else:
-                thematic = "☒"
+                thematic = "☒" if control_mark == -1 else control_mark
             self.treeview.insert(topic_tv_item, END, values=("", "Тематична: %s" % thematic), tag="thematic_mark")
         self.update_button.config(state="normal")
 
