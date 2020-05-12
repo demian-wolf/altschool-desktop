@@ -54,6 +54,9 @@ REQUEST_HEADERS = {
 
 UID = 1269
 
+UNSENT, ABSENT = "☒", "—"
+
+
 class Main(Tk):
     def __init__(self):
         super().__init__()
@@ -65,15 +68,24 @@ class Main(Tk):
         self.state("zoomed")
         self.focus_force()
 
+        self.create_wgts()
+        self.create_menus()
+
+        self.update_info(first_time=True)
+        self.deiconify()
+
+    def create_wgts(self):
         panel_frame = Frame(self)
         leftpanel_frame = Frame(panel_frame)
         self.subj_var = StringVar(self)
-        self.subj_cbox = Combobox(leftpanel_frame, values=list(SUBJ_IDS.keys()), state="readonly", textvariable=self.subj_var)
+        self.subj_cbox = Combobox(leftpanel_frame, values=list(SUBJ_IDS.keys()), state="readonly",
+                                  textvariable=self.subj_var)
         self.subj_cbox.current(0)
         self.subj_cbox.pack(side=LEFT)
 
         self.lang_var = StringVar(self)
-        self.lang_cbox = Combobox(leftpanel_frame, values=["RU", "UA"], state="readonly", textvariable=self.lang_var, width=3)
+        self.lang_cbox = Combobox(leftpanel_frame, values=["RU", "UA"], state="readonly", textvariable=self.lang_var,
+                                  width=3)
         self.lang_cbox.current(0)
         self.lang_cbox.pack(side=LEFT)
 
@@ -81,7 +93,8 @@ class Main(Tk):
         self.update_button.pack(side=LEFT)
 
         self.show_base_info_var = BooleanVar(self, False)
-        Checkbutton(leftpanel_frame, text="Відображати базову інформацію", variable=self.show_base_info_var).pack(side=LEFT)
+        Checkbutton(leftpanel_frame, text="Відображати базову інформацію", variable=self.show_base_info_var).pack(
+            side=LEFT)
         leftpanel_frame.pack(side=LEFT)
 
         rightpanel_frame = Frame(panel_frame)
@@ -120,10 +133,6 @@ class Main(Tk):
         self.lang_var.trace("w", self.update_info)
         self.show_base_info_var.trace("w", self.update_info)
 
-        self.create_menus()
-        self.update_info(first_time=True)
-        self.deiconify()
-
     def create_menus(self):
         def do_rclick_popup(event):
             try:
@@ -150,9 +159,8 @@ class Main(Tk):
         self.rclick_menu.add_separator()
         self.rclick_menu.add_command(label="Властивості", command=self.view_properties)
         self.treeview.bind("<Button-3>", do_rclick_popup)
-        
-        
-    def update_info(self, *args, first_time=False):
+
+    def update_info(self, first_time=False):
         # TODO: add catching errors
         # TODO: add archived years
         # TODO: add properties
@@ -183,50 +191,50 @@ class Main(Tk):
             self.treeview.insert("", END)
             
         for topic in journal_data["themes"]:
-            topic_tv_item = self.treeview.insert("", END, text=topic["title"], tag="topic")
-            self.treeview.item(topic_tv_item, open=True)
+            topic_item = self.treeview.insert("", END, text=topic["title"], tag="topic")
+            self.treeview.item(topic_item, open=True)
             for lesson in topic["lessons"]:
                 tags = ["lesson"]
                 
                 isHw = int(lesson["hw"]["isHw"])
-                testId = 0 if "testId" not in lesson else lesson["testId"]
-                trainingTestId = 0 if "trainingTestId" not in lesson else lesson["trainingTestId"]
+                isTest = "testId" in lesson
+                isTrainingTest = "trainingTestId" in lesson
+                testId = lesson["testId"] if isTest else 0
+                trainingTestId = lesson["trainingTestId"] if isTrainingTest else 0
                 lessonId = lesson["id"]
 
                 # Get and process the marks
-                if trainingTestId:
-                    training_test_mark = lesson["trainingTestMark"] if lesson["trainingTestMark"] else "☒"  # TODO: how to determine if it is sent and 0, or it is not sent
+                if isTrainingTest:
+                    training_test_mark = lesson["trainingTestMark"] if lesson["trainingTestMark"] else UNSENT  # TODO: how to determine if it is sent and 0, or it is not sent
                 else:
-                    training_test_mark = "—"
-                hw_mark = "☒"
-                test_mark = "☒"
-                result_mark = "☒"
+                    training_test_mark = ABSENT
+                hw_mark = UNSENT
+                test_mark = UNSENT
+                result_mark = UNSENT
                 if isHw:
                     if lesson["hw"]["status"] == 4:
                         hw_mark = lesson["hw"]["mark"]
                         result_mark = hw_mark
                 else:
-                    hw_mark = "—"
-                if testId:
+                    hw_mark = ABSENT
+                if isTest:
                     if lesson["isCompleted"]:
                         test_mark = lesson["testMark"]
                         result_mark = test_mark
                 else:
-                    test_mark = "—"
-                if hw_mark == test_mark == "—":
-                    result_mark = "—"
-                if (hw_mark not in ["—", "☒"]) and (test_mark not in ["—", "☒"]):
+                    test_mark = ABSENT
+                if hw_mark == test_mark == ABSENT:
+                    result_mark = ABSENT
+                if (hw_mark not in [ABSENT, UNSENT]) and (test_mark not in [ABSENT, UNSENT]):
                     result_mark = hw_mark + test_mark
                 mark = "%s (%s/%s/%s)" % (result_mark, training_test_mark, test_mark, hw_mark)
 
                 # Get and process the date
-                date = lesson["date"].split()[0]
-                cur_date = datetime.date.today()
-                if date == "{:0>2}-{:0>2}-{:0>2}".format(cur_date.year, cur_date.month, cur_date.day):  # is this a today lesson?
+                date = lesson["date"].split()[0].split("-")
+                if datetime.date(*map(int, date)) == datetime.date.today():
                     tags.remove("lesson")
                     tags.append("todayLesson")
-                date = date.split("-")
-                date = " ".join((str(int(date[2])), MONTHS2UA[date[1]], date[0]))
+                date = " ".join((date[2], MONTHS2UA[date[1]], date[0]))
 
                 # Get and process the special marks
                 special = ""
@@ -235,14 +243,16 @@ class Main(Tk):
                         special += SPECIAL[smark] + " "
                         tags.append(smark)
                 
-                self.treeview.insert(topic_tv_item, END, text=lesson["title"], values=(date, mark, special, isHw, testId, trainingTestId, lessonId), tags=tags)
+                self.treeview.insert(topic_item, END, text=lesson["title"], values=(date, mark, special, isHw, testId, trainingTestId, lessonId), tags=tags)
 
             # Count the thematic mark
             marks_list = []
-            control_mark = -1  # for the case if the control work is not done yet
-            for item in self.treeview.get_children(topic_tv_item):
+            control_mark = -1  # for the case if the control work is not done/checked yet
+            for item in self.treeview.get_children(topic_item):
                 result_mark = self.treeview.item(item, "values")[1].split()[0]
-                if (result_mark not in "—☒") and (SPECIAL["isSickLeave"] not in self.treeview.item(item)) and (SPECIAL["isVerbal"] not in self.treeview.item(item)):
+                if (result_mark not in "—☒")\
+                        and (SPECIAL["isSickLeave"] not in self.treeview.item(item))\
+                        and (SPECIAL["isVerbal"] not in self.treeview.item(item)):
                     if SPECIAL["isControl"] not in self.treeview.item(item)["values"][2]:
                         marks_list.append(int(result_mark))
                     else:
@@ -253,8 +263,8 @@ class Main(Tk):
                     thematic = (thematic + control_mark) / 2
                 thematic = "%.f" % thematic
             else:
-                thematic = "☒" if control_mark == -1 else control_mark
-            self.treeview.insert(topic_tv_item, END, values=("", "Тематична: %s" % thematic), tag="thematic_mark")
+                thematic = UNSENT if control_mark == -1 else control_mark
+            self.treeview.insert(topic_item, END, values=("", "Тематична: %s" % thematic), tag="thematic_mark")
         self.update_button.config(state="normal")
 
     def open_lesson_in_webbrowser(self, event=None):
@@ -268,7 +278,7 @@ class Main(Tk):
     def open_test_hw_in_webbrowser(self, event=None):
         webbrowser.open("https://online-shkola.com.ua/tests/completing.php?id=%s" % self.treeview.item(self.treeview.selection()[0])["values"][-3])
 
-    def open_hw_in_webbrowser(self, even=None):
+    def open_hw_in_webbrowser(self, event=None):
         webbrowser.open("https://online-shkola.com.ua/lessons/watch.php?id=%s#lesson-content-homework" % self.treeview.item(self.treeview.selection()[0])["values"][-1])
 
     def view_properties(self, event=None):
@@ -283,13 +293,16 @@ class Main(Tk):
     def help(self, event=None):
         pass
 
+
 class AdvancedSettings(Toplevel):
     def __init__(self):
         super().__init__()
 
+
 class Help(Toplevel):
     def __init__(self):
         super().__init__()
-    
+
+
 if __name__ == "__main__":
     Main().mainloop()
