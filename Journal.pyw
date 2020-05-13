@@ -54,7 +54,7 @@ REQUEST_HEADERS = {
 
 UID = 1269
 
-UNSENT, ABSENT = "☒", "—"
+UNSENT, UNCHECKED, ABSENT = "☒", "⚖", "—"
 
 
 class Main(Tk):
@@ -160,11 +160,11 @@ class Main(Tk):
         self.rclick_menu.add_command(label="Властивості", command=self.view_properties)
         self.treeview.bind("<Button-3>", do_rclick_popup)
 
-    def update_info(self, first_time=False):
+    def update_info(self, *args, first_time=False):
         # TODO: add catching errors
         # TODO: add archived years
         # TODO: add properties
-        # TODO: do something only when something selected in Treeview, not just double-clicked
+        # TODO: do something only when something is selected in Treeview, not just double-clicked on the free space
 
         self.update_button.config(state="disabled")
         if not first_time:
@@ -213,14 +213,14 @@ class Main(Tk):
                 result_mark = UNSENT
                 if isHw:
                     if lesson["hw"]["status"] == 4:
-                        hw_mark = lesson["hw"]["mark"]
-                        result_mark = hw_mark
+                        result_mark = hw_mark = lesson["hw"]["mark"]
+                    elif lesson["hw"]["status"] == 2:
+                        result_mark = hw_mark = UNCHECKED
                 else:
                     hw_mark = ABSENT
                 if isTest:
                     if lesson["isCompleted"]:
-                        test_mark = lesson["testMark"]
-                        result_mark = test_mark
+                        result_mark = test_mark = lesson["testMark"]
                 else:
                     test_mark = ABSENT
                 if hw_mark == test_mark == ABSENT:
@@ -250,7 +250,7 @@ class Main(Tk):
             control_mark = -1  # for the case if the control work is not done/checked yet
             for item in self.treeview.get_children(topic_item):
                 result_mark = self.treeview.item(item, "values")[1].split()[0]
-                if (result_mark not in "—☒")\
+                if (result_mark not in (UNSENT, UNCHECKED, ABSENT))\
                         and (SPECIAL["isSickLeave"] not in self.treeview.item(item))\
                         and (SPECIAL["isVerbal"] not in self.treeview.item(item)):
                     if SPECIAL["isControl"] not in self.treeview.item(item)["values"][2]:
