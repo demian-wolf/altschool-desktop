@@ -10,6 +10,7 @@ import io
 
 import requests
 
+
 PATH_TO_LATEST_ARCHIVE = "https://github.com/demian-wolf/Alternativa-PC-Client/archive/master.zip"
 CWD = os.getcwd()
 APP_NAME = "Alternativa-PC-Client"
@@ -41,6 +42,7 @@ class Updater(tk.Tk):
         self.tempdir_descriptor = tempfile.TemporaryDirectory()
         atexit.register(self.tempdir_descriptor.cleanup)
 
+        self.iconphoto(True, tk.PhotoImage(file="updater_icon.png"))
         self.title("\"Альтернатива\" ПК-Клієнт Автооновлювач")
         self.resizable(False, False)
         self.create_wgts()
