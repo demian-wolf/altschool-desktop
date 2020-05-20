@@ -4,6 +4,7 @@ import tempfile
 import hashlib
 import zipfile
 import shutil
+import atexit
 import os
 import io
 
@@ -37,6 +38,8 @@ class Updater(tk.Tk):
         super().__init__()
 
         self.cwd_checksums, self.upd_checksums = {}, {}
+        self.tempdir_descriptor = tempfile.TemporaryDirectory()
+        atexit.register(self.tempdir_descriptor.cleanup)
 
         self.title("\"Альтернатива\" ПК-Клієнт Автооновлювач")
         self.resizable(False, False)
@@ -65,7 +68,6 @@ class Updater(tk.Tk):
         self.state_label["cursor"] = ""
 
     def check_for_updates(self):
-        self.tempdir_descriptor = tempfile.TemporaryDirectory()
         tmp_path = self.tempdir_descriptor.name
 
         zipfile.ZipFile(io.BytesIO(requests.get(PATH_TO_LATEST_ARCHIVE).content)).extractall(tmp_path)
@@ -77,20 +79,19 @@ class Updater(tk.Tk):
         for upd_fname in list_dir(self.upd_path):
             self.upd_checksums[upd_fname] = md5(os.path.join(self.upd_path, upd_fname))
 
-        print(CWD, self.upd_path)
-        print(self.cwd_checksums, self.upd_checksums, sep="\n")
         return self.cwd_checksums != self.upd_checksums
 
     def update_app(self):
         self.update_btn["state"] = "disabled"
         self.update()
+
         seen = []
         for fname, _ in get_dict_difference(self.cwd_checksums, self.upd_checksums):
             if fname in seen:
                 continue
             seen.append(fname)
 
-            # TODO: remove not only unnecessary files from previous version but directories, too
+            # TODO: remove not only unnecessary files from previous version but empty directories, too
             if fname in self.cwd_checksums and fname not in self.upd_checksums:  # if the file doesn't exist in new update
                 os.remove(fname)
                 continue
@@ -100,8 +101,6 @@ class Updater(tk.Tk):
                 os.makedirs(ppath, exist_ok=True)
 
             shutil.copy(os.path.join(self.upd_path, fname), CWD)
-
-        self.tempdir_descriptor.cleanup()
 
         self.update_btn["state"] = "normal"
         self.update()
