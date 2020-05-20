@@ -26,7 +26,7 @@ def md5(filename):
 
 
 def list_dir(path):
-    return filter(lambda p: not p.startswith(".git") and not p.startswith(".idea"),
+    return filter(lambda p: not p.startswith(".git") and not p.startswith(".idea") and not p.startswith("__pycache__"),
                   (os.path.relpath(os.path.join(dirpath, file), path)
                    for (dirpath, dirnames, filenames) in os.walk(path)
                    for file in filenames))
