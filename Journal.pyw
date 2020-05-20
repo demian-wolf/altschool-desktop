@@ -6,6 +6,8 @@ import datetime
 import requests
 import webbrowser
 
+from Updater import Updater
+
 
 SUBJ_IDS = OrderedDict([
     ('Фізика', 3),
@@ -89,7 +91,7 @@ class Main(Tk):
         self.lang_cbox.current(0)
         self.lang_cbox.pack(side=LEFT)
 
-        self.update_button = Button(leftpanel_frame, text="Оновити ⭮", command=self.update_info)
+        self.update_button = Button(leftpanel_frame, text="Оновити інформацію ⭮", command=self.update_info)
         self.update_button.pack(side=LEFT)
 
         self.show_base_info_var = BooleanVar(self, False)
@@ -101,6 +103,7 @@ class Main(Tk):
         Button(leftpanel_frame, text="Увійти до аккаунту", command=self.login).pack(side=LEFT)
         Button(rightpanel_frame, text="Інші налаштування ⚙", command=self.advanced_settings).pack(side=LEFT)
         Button(rightpanel_frame, text="Допомога ❓", command=self.help).pack(side=LEFT)
+        Button(rightpanel_frame, text="Оновити програму ⭮", command=self.update_app).pack(side=LEFT)
         rightpanel_frame.pack(side=RIGHT)
         panel_frame.pack(fill=X)
 
@@ -293,6 +296,9 @@ class Main(Tk):
     def help(self, event=None):
         pass
 
+    def update_app(self):
+        self.destroy()
+        Updater().mainloop()
 
 class AdvancedSettings(Toplevel):
     def __init__(self):

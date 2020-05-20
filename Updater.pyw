@@ -46,6 +46,7 @@ class Updater(tk.Tk):
         self.iconphoto(True, tk.PhotoImage(file="updater_icon.png"))
         self.title("\"Альтернатива\" ПК-Клієнт Автооновлювач")
         self.resizable(False, False)
+        self.focus_force()  # in case if the Updater is running right from the Journal
         self.create_wgts()
 
     def create_wgts(self):
