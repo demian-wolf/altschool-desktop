@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 import tempfile
 import hashlib
 import zipfile
+import shutil
 import os
 import io
 
@@ -27,15 +28,19 @@ def list_dir(path):
                    for (dirpath, dirnames, filenames) in os.walk(path)
                    for file in filenames))
 
+def get_dict_difference(dict1, dict2):
+    return set(dict1.items()) ^ set(dict2.items())
+
 
 class Updater(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.update_app()
+
+        self.cwd_checksums, self.upd_checksums = {}, {}
+
         self.title("\"Альтернатива\" ПК-Клієнт Автооновлювач")
         self.resizable(False, False)
         self.create_wgts()
-        # TODO: BAD CONTROLSUMMS!!!
 
     def create_wgts(self):
         self.state_label = tk.Label(self, text="Перевірка оновлень...", relief="raised",
@@ -59,25 +64,47 @@ class Updater(tk.Tk):
             self.state_label["bg"] = "lightgreen"
         self.state_label["cursor"] = ""
 
-    def update_app(self):
-        pass
-
     def check_for_updates(self):
-        self.cwd_checksums, self.upd_checksums = {}, {}
-        with tempfile.TemporaryDirectory() as tmp_path:
-            zipfile.ZipFile(io.BytesIO(requests.get(PATH_TO_LATEST_ARCHIVE).content)).extractall(tmp_path)
+        self.tempdir_descriptor = tempfile.TemporaryDirectory()
+        tmp_path = self.tempdir_descriptor.name
 
-            for cwd_fname in list_dir(CWD):
-                self.cwd_checksums[cwd_fname] = md5(cwd_fname)
+        zipfile.ZipFile(io.BytesIO(requests.get(PATH_TO_LATEST_ARCHIVE).content)).extractall(tmp_path)
 
-            upd_path = os.path.join(tmp_path, APP_NAME + "-master")
+        for cwd_fname in list_dir(CWD):
+            self.cwd_checksums[cwd_fname] = md5(cwd_fname)
 
-            for upd_fname in list_dir(upd_path):
-                self.upd_checksums[upd_fname] = md5(os.path.join(upd_path, upd_fname))
+        self.upd_path = os.path.join(tmp_path, APP_NAME + "-master")
+        for upd_fname in list_dir(self.upd_path):
+            self.upd_checksums[upd_fname] = md5(os.path.join(self.upd_path, upd_fname))
 
-            print(CWD, os.path.join(tmp_path, APP_NAME + "-master"))
-            print(self.cwd_checksums, self.upd_checksums, sep="\n")
-            return self.cwd_checksums != self.upd_checksums
+        print(CWD, self.upd_path)
+        print(self.cwd_checksums, self.upd_checksums, sep="\n")
+        return self.cwd_checksums != self.upd_checksums
+
+    def update_app(self):
+        self.update_btn["state"] = "disabled"
+        self.update()
+        seen = []
+        for fname, _ in get_dict_difference(self.cwd_checksums, self.upd_checksums):
+            if fname in seen:
+                continue
+            seen.append(fname)
+
+            # TODO: remove not only unnecessary files from previous version but directories, too
+            if fname in self.cwd_checksums and fname not in self.upd_checksums:  # if the file doesn't exist in new update
+                os.remove(fname)
+                continue
+
+            ppath = os.path.dirname(fname)
+            if ppath:
+                os.makedirs(ppath, exist_ok=True)
+
+            shutil.copy(os.path.join(self.upd_path, fname), CWD)
+
+        self.tempdir_descriptor.cleanup()
+
+        self.update_btn["state"] = "normal"
+        self.update()
 
 
 if __name__ == "__main__":
