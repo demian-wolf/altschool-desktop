@@ -35,6 +35,7 @@ class Updater(tk.Tk):
         self.title("\"Альтернатива\" ПК-Клієнт Автооновлювач")
         self.resizable(False, False)
         self.create_wgts()
+        # TODO: BAD CONTROLSUMMS!!!
 
     def create_wgts(self):
         self.state_label = tk.Label(self, text="Перевірка оновлень...", relief="raised",
