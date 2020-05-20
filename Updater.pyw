@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.messagebox as tk_msgbox
 import tkinter.ttk as ttk
 import tempfile
 import hashlib
@@ -78,7 +79,6 @@ class Updater(tk.Tk):
             self.cwd_checksums[cwd_fname] = md5(cwd_fname)
 
         self.upd_path = os.path.join(tmp_path, APP_NAME + "-master")
-        print(self.upd_path)
         for upd_fname in list_dir(self.upd_path):
             self.upd_checksums[upd_fname] = md5(os.path.join(self.upd_path, upd_fname))
 
@@ -105,8 +105,8 @@ class Updater(tk.Tk):
 
             shutil.copy(os.path.join(self.upd_path, fname), CWD)
 
-        self.update_btn["state"] = "normal"
-        self.update()
+        tk_msgbox.showinfo("", "Оновлення успішно завершено! Закрийте вже відкриті екземпляри програми та відкрийте її знову.")
+        self.destroy()
 
 
 if __name__ == "__main__":
