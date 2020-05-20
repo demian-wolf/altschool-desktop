@@ -64,7 +64,7 @@ class Main(Tk):
         # withdraw and deiconify are used to make window opening slighter
         self.withdraw()
         self.iconphoto(True, PhotoImage(file="icon.png"))
-        self.title('Журнал - "Альтернатива" ПК-клієнт')
+        self.title('Журнал - "Альтернатива" ПК-Клієнт')
         self.state("zoomed")
         self.focus_force()
 
