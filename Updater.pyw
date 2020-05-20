@@ -12,7 +12,7 @@ import requests
 
 PATH_TO_LATEST_ARCHIVE = "https://github.com/demian-wolf/Alternativa-PC-Client/archive/master.zip"
 CWD = os.getcwd()
-APP_NAME = os.path.basename(os.path.normpath(CWD))
+APP_NAME = "Alternativa-PC-Client"
 
 
 def md5(filename):
@@ -76,6 +76,7 @@ class Updater(tk.Tk):
             self.cwd_checksums[cwd_fname] = md5(cwd_fname)
 
         self.upd_path = os.path.join(tmp_path, APP_NAME + "-master")
+        print(self.upd_path)
         for upd_fname in list_dir(self.upd_path):
             self.upd_checksums[upd_fname] = md5(os.path.join(self.upd_path, upd_fname))
 
