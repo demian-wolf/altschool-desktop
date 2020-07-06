@@ -176,7 +176,7 @@ class Main(Tk):
         subject = self.subj_var.get()
         language = self.lang_var.get()
         journal_data = requests.get("https://online-shkola.com.ua/api/v2/users/%s/thematic/subject/%s" % (UID, SUBJ_IDS[subject]),
-                                   headers=REQUEST_HEADERS, cookies={"lang": language.lower()}).json()
+                                   headers=REQUEST_HEADERS, cookies={"lang": language.lower()}, verify=False).json()
         
         self.treeview.delete(*self.treeview.get_children())
 
