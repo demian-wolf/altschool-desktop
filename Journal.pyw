@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter.font import *
 from tkinter.ttk import *
+import _tkinter
 from collections import OrderedDict
 import datetime
 import webbrowser
@@ -42,9 +43,17 @@ SPECIAL = {
     "isVisited": "[✔]",
     "isControl": "[К.Р.]",
     "isHQ": "[NEW]",
+    "isVerbal": "[У]",
     "isSickLeave": "[н-]",
-    "isVerbal": "[У]"    
     }
+
+##SPECIAL = {
+##    "isVisited": ("[✔]", "Відвідано"),
+##    "isControl": ("[К.Р.]", "Контрольна робота"),
+##    "isHQ": ("[NEW]", "Новий відеоурок"),
+##    "isVerbal": ("[У]", "Усний урок"),
+##    "isSickLeave": ("[н-]", "Пропущено через хворобу"),
+##    }
 
 REQUEST_HEADERS = {
     'Host': 'online-shkola.com.ua',
@@ -69,7 +78,15 @@ class Main(Tk):
         self.withdraw()
         self.iconphoto(True, PhotoImage(file="app_icon.png"))
         self.title('Журнал - "Альтернатива" ПК-Клієнт')
-        self.state("zoomed")
+
+        try:
+            self.state("zoomed")
+        except _tkinter.TclError:
+            try:
+                self.attributes("-zoomed", True)
+            except _tkinter.TclError:
+                pass
+            
         self.focus_force()
 
         self.create_wgts()
@@ -154,9 +171,9 @@ class Main(Tk):
                 self.rclick_menu.grab_release()
                 
         self.rclick_menu = Menu(self, tearoff=False)
-        self.bold_font = Font(self, self.rclick_menu["font"])
-        self.bold_font["weight"] = "bold"
-        self.rclick_menu.add_command(label="Відкрити урок у браузері", command=self.open_lesson_in_webbrowser, font=self.bold_font)
+        bold_font = Font(self, self.rclick_menu["font"])
+        bold_font["weight"] = "bold"
+        self.rclick_menu.add_command(label="Відкрити урок у браузері", command=self.open_lesson_in_webbrowser, font=bold_font)
         self.rclick_menu.add_separator()
         self.rclick_menu.add_command(label="Скласти Тренувальний Тест", command=self.open_training_test_in_webbrowser)
         self.rclick_menu.add_command(label="Скласти Тестове ДЗ", command=self.open_test_hw_in_webbrowser)
@@ -289,30 +306,39 @@ class Main(Tk):
         webbrowser.open("https://online-shkola.com.ua/lessons/watch.php?id=%s#lesson-content-homework" % self.treeview.item(self.treeview.selection()[0])["values"][-1])
 
     def view_properties(self, event=None):
-        pass
+        Properties()
 
     def login(self, event=None):
         webbrowser.open("https://online-shkola.com.ua/")
 
     def advanced_settings(self, event=None):
-        pass
+        AdvancedSettings()
 
     def help(self, event=None):
-        pass
+        Help()
 
     def update_app(self):
         self.destroy()
         Updater().mainloop()
 
+class Properties(Toplevel):
+    def __init__(self):
+        super().__init__()
+
+        self.title("Властивості уроку")
+
 class AdvancedSettings(Toplevel):
     def __init__(self):
         super().__init__()
 
+        self.title("Інші налаштування")
 
 class Help(Toplevel):
     def __init__(self):
         super().__init__()
 
+        self.title("Допомога")
 
+        
 if __name__ == "__main__":
     Main().mainloop()
