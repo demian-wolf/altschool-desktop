@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="{lang}">
+  <head>
+    <meta charset="utf-8">
+    <title>Конспекти уроків Онлайн-школи "Альтернатива"</title>
+    <style>
+        header, footer {
+            text-align: center;
+        }
+        
+        .lesson-content {
+            width: 70%;
+            margin: auto;
+        }
+        
+        .l-date, .l-summary {
+            display: block;            
+        }
+        
+        .l-date {
+            font-weight: bold;
+        }
+        
+        .subject-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 32px;
+        }
+        
+        #contents {
+            list-style-type: none;
+        }
+        
+        a.hyperlink {
+            opacity: 0;
+            padding-left: 10px;
+            text-decoration: none;
+        }
+        
+        a.hyperlink:hover {
+            opacity: 1;
+        }
+        
+    </style>
+  </head>
+  <body>
+    <header>
+        <p>
+            <h2>
+                Експорт конспектів уроків <a href="https://online-shkola.com.ua/" target="_blank">Онлайн-школи "Альтернативи"</a>
+            </h2>
+        </p>
+        <p>
+            <ul id="contents">
+                {% for subject in subjects %}
+                    <li><a href="#subject{{ subject.id }}"><strong>{{ subject.title }}</strong></a></li>
+                {% endfor %}
+            </ul>
+        </p>
+    </header>
+    <hr>
+    <main>
+        {% for subject in summaries %}
+            <div id="subject{{ subject.id }}" class="subject-title">{{ subject.title }}<a class="hyperlink" href="#subject{{ subject.id }}" title="Посилання на цей предмет">¶</a></div>
+            {% for date, summary in summaries[subject] %}
+                <div id="summary-{{ subject.id }}-{{ date }}" class="lesson-content">
+                    <div class="l-date">{{ date }}<a class="hyperlink" href="#summary-{{ subject.id }}-{{ date }}" title="Посилання на цей конспект">¶</a></div>
+                    <div class="l-summary">{{ summary }}</div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </main>
+    <hr>
+    <footer>
+        <p>
+            <h4>
+                Згенеровано за допомогою <a href="https://github.com/demian-wolf/Alternativa-PC-Client/" target="_blank">"Альтернатива" ПК-Клієнту</a> {{ creation_date }}.
+            </h4>
+        </p>
+    </footer>
+  </body>
+</html>
