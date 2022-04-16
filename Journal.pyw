@@ -76,7 +76,7 @@ class Main(Tk):
 
         # withdraw and deiconify are used to make window opening slighter
         self.withdraw()
-        self.iconphoto(True, PhotoImage(file="app_icon.png"))
+        self.iconphoto(True, PhotoImage(file="icons/png/app.png"))
         self.title('Журнал - "Альтернатива" ПК-Клієнт')
 
         try:
@@ -86,7 +86,7 @@ class Main(Tk):
                 self.attributes("-zoomed", True)
             except _tkinter.TclError:
                 pass
-            
+
         self.focus_force()
 
         self.create_wgts()
