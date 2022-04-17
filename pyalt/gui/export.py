@@ -8,6 +8,7 @@ import datetime
 import random
 import collections
 import base64
+import os.path
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,7 +16,7 @@ from jinja2 import Template
 import htmlmin
 import magic
 
-from JournalAPI import JournalAPI
+from pyalt.api.journal import JournalAPI
 
 
 HELP_TEXT = """Ця програма збирає всі конспекти (\"Головне в уроці\") з усіх доступних уроків.
@@ -149,7 +150,12 @@ class Main(tk.Tk):
 
         self.set_task("Фінальна обробка даних...")
 
-        with open("summaries_template.html") as template_fp:
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "summaries_template.html",
+        )
+
+        with open(template_path) as template_fp:
             template = Template(template_fp.read())
             with open("summaries.html", "w") as output_fp:
                 output_fp.write(htmlmin.minify(template.render(lang=lang, subjects=japi.subjects, summaries=self.summaries, creation_date=datetime.datetime.today().strftime("%d.%m.%Y %H:%M:%S"))))

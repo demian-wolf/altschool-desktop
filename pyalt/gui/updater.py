@@ -43,7 +43,12 @@ class Updater(tk.Tk):
         self.tempdir_descriptor = tempfile.TemporaryDirectory()
         atexit.register(self.tempdir_descriptor.cleanup)
 
-        self.iconphoto(True, tk.PhotoImage(file="icons/png/updater.png"))
+        icon_path = os.path.join(
+            os.path.dirname(__file__),
+            "../icons/png/updater.png",
+        )
+        self.iconphoto(True, tk.PhotoImage(file=icon_path))
+
         self.title("\"Альтернатива\" ПК-Клієнт Автооновлювач")
         self.resizable(False, False)
         self.focus_force()  # in case if the Updater is running right from the Journal
