@@ -11,6 +11,7 @@ import io
 
 import requests
 
+from .icons import get_iconphoto
 
 PATH_TO_LATEST_ARCHIVE = "https://github.com/demian-wolf/Alternativa-PC-Client/archive/master.zip"
 CWD = os.getcwd()
@@ -43,11 +44,7 @@ class Updater(tk.Tk):
         self.tempdir_descriptor = tempfile.TemporaryDirectory()
         atexit.register(self.tempdir_descriptor.cleanup)
 
-        icon_path = os.path.join(
-            os.path.dirname(__file__),
-            "../icons/png/updater.png",
-        )
-        self.iconphoto(True, tk.PhotoImage(file=icon_path))
+        self.iconphoto(True, get_iconphoto("updater.png"))
 
         self.title("\"Альтернатива\" ПК-Клієнт Автооновлювач")
         self.resizable(False, False)

@@ -6,12 +6,11 @@ from collections import OrderedDict
 import datetime
 import webbrowser
 import warnings
-import os.path
 
 import requests
 
+from .icons import get_iconphoto
 from .updater import Updater
-
 
 SUBJ_IDS = OrderedDict([
     ('Фізика', 3),
@@ -78,11 +77,7 @@ class Main(Tk):
         # withdraw and deiconify are used to make window opening slighter
         self.withdraw()
 
-        icon_path = os.path.join(
-            os.path.dirname(__file__),
-            "../icons/png/app.png",
-        )
-        self.iconphoto(True, PhotoImage(file=icon_path))
+        self.iconphoto(True, get_iconphoto("app.png"))
 
         self.title('Журнал - "Альтернатива" ПК-Клієнт')
 
