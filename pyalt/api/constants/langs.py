@@ -1,0 +1,4 @@
+UKRAINIAN = "ua"
+RUSSIAN = "ru"
+
+LANGS = (UKRAINIAN, RUSSIAN)
